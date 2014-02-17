@@ -1,0 +1,11 @@
+Quaternion rotation of arrows.
+
+I will use the code to visualize the orientation of an inertial motion unit (IMU) comprising a tri-axial accelerometer and a tri-axial gyroscope from an Octave code. The Octave code will compute orientation quaternion of the IMU, and feed the orientation quaternion into this java class.
+
+Written by Timo Rantalainen 2014 tjrantal @ gmail dot com. Licenced with the GPL 3.0 (https://www.gnu.org/copyleft/gpl.html)
+
+Got the basics from Kai Ruhl's JOGL demos http://www.land-of-kain.de/docs/jogl/
+
+Quaternion.java is copied from http://introcs.cs.princeton.edu/java/32class/Quaternion.java.html, modified to allow access to x0 to x3.
+
+Obviously depends on jogl (http://jogamp.org/jogl/www/), which in turn depends on gluegen.
