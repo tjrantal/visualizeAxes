@@ -8,4 +8,4 @@ Got the basics from Kai Ruhl's JOGL demos http://www.land-of-kain.de/docs/jogl/
 
 Quaternion.java is copied from http://introcs.cs.princeton.edu/java/32class/Quaternion.java.html, modified to allow access to x0 to x3.
 
-Obviously depends on jogl (http://jogamp.org/jogl/www/), which in turn depends on gluegen.
+Obviously depends on jogl (http://jogamp.org/jogl/www/), which in turn depends on gluegen. Native windows libraries are included with the code.
