@@ -38,7 +38,7 @@
 		<copy todir="${build}/jarLib">
 			<fileset dir="${jarLib}"/>
 		</copy>
-		<jar jarfile="${build}/VisualizeAxes.jar" basedir="${classes}" manifest="manifest/manifest.mf"/>
+		<jar jarfile="${build}/VisualizeAxes.jar" basedir="${classes}" manifest="manifest/MANIFEST.MF"/>
 	</target>
   
 </project>

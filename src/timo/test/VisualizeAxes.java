@@ -11,6 +11,7 @@ import java.io.*;					/*For texture*/
 import com.jogamp.opengl.util.texture.*;		/*For texture*/
 import java.io.IOException;					/*Error handling*/
 import timo.test.utils.*;					/*Quaternions for rotations*/
+import java.nio.*;							/*Bytebuffers*/
 
 /**
  * Modified from the: 
@@ -56,7 +57,7 @@ public class VisualizeAxes extends GLCanvas implements GLEventListener {
         setSize(width, height);
         addGLEventListener(this);
         rotationAngle = 0;
-		start();
+		
     }
 
 	public void start(){
@@ -84,6 +85,35 @@ public class VisualizeAxes extends GLCanvas implements GLEventListener {
 	/*Constructor with no arguments*/
     public VisualizeAxes() {
     	this(800,500);
+		/*try to read quaternions from a file*/
+		File fName =new File("quaternions.tab");
+		System.out.println("Start reading .tab");
+		if (fName.exists()){
+			try{
+				FileInputStream fileIn = new FileInputStream(fName);
+				byte[] dataIn = new byte[(int) fName.length()];
+				fileIn.read(dataIn);
+				ByteBuffer bb = ByteBuffer.wrap(dataIn);
+				bb.rewind();
+				float[] floatArray = new float[dataIn.length/4];
+				FloatBuffer fb = bb.asFloatBuffer().get(floatArray);
+				float[][] rotationQuaternion = new float[floatArray.length/4][4];
+				System.out.println("Read, insert to rotationQuaternion");
+				for (int i = 0;i<rotationQuaternion.length;++i){
+					for (int j = 0;j<4;++j){
+						rotationQuaternion[i][j] = floatArray[4*i+j];
+						if (i == 1){
+							System.out.println("values "+Float.toString(rotationQuaternion[i][j]));
+						}
+					}
+				}
+				setRotationQuaternion(rotationQuaternion);
+			}catch (Exception err){
+				System.out.println(err.toString());
+				System.out.println("Couldn't open the file");
+			}
+		}
+		start();
     }
 	
 	public void setRotationQuaternion(float[][] rotationQuaternion){
@@ -164,6 +194,13 @@ public class VisualizeAxes extends GLCanvas implements GLEventListener {
 			if (currentIndex <rotationQuaternion.length){
 				tempRQ = rotationQuaternion[currentIndex];
 				++currentIndex;
+			}else{
+				try{
+					Thread.sleep(5000);
+				}catch(Exception err){
+					
+				}
+				System.exit(0);
 			}
 		}
 		float[][] axes = {{0f,1f,0f}, {-1f,0f,0f},{0f,0f,1f}};
@@ -274,7 +311,7 @@ public class VisualizeAxes extends GLCanvas implements GLEventListener {
      * @param args Command line args.
      */
     public final static void main(String[] args) {
-        VisualizeAxes canvas = new VisualizeAxes(800, 500);
+        VisualizeAxes canvas = new VisualizeAxes();
 		//canvas.start();
     }
 
