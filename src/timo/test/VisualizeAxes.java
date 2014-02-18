@@ -33,9 +33,11 @@ public class VisualizeAxes extends GLCanvas implements GLEventListener {
     private static final long serialVersionUID = 20140218L;	/** Serial version UID. */
     private GLU glu;										/** The GL unit (helper class). */
     private int fps = 60;									/** The frames per second setting. */
-    private FPSAnimator animator;							/** The OpenGL animator. */
+    private FPSAnimator animator=null;							/** The OpenGL animator. */
 	private float rotationAngle;
+	private int currentIndex = 0;
 	private float[][] rotationQuaternion = null;			/** Rotation quaternion*/
+	private float[] tempRQ = null;
     /**
      * A new mini starter.
      * 
@@ -43,17 +45,45 @@ public class VisualizeAxes extends GLCanvas implements GLEventListener {
      * @param width The window width.
      * @param height The window height.
      */
-    public VisualizeAxes(GLCapabilities capabilities, int width, int height) {
-    	super(capabilities);
+    public VisualizeAxes(int width, int height) {
+    	super(createGLCapabilities());
+		JFrame frame = new JFrame("Visualize Quaternion Axes");
+        frame.getContentPane().add(this, BorderLayout.CENTER);
+        frame.setSize(width, height);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setVisible(true);
+        this.requestFocus();
         setSize(width, height);
         addGLEventListener(this);
         rotationAngle = 0;
+		start();
     }
 
+	public void start(){
+		Boolean isStarted = false;
+		while (!isStarted){
+			if (animator != null){
+				animator.start();
+			}else{
+				System.out.println("Animator null");
+				try{
+					Thread.sleep(100);
+				}catch(Exception err){}
+			}
+			
+		}
+		
+	}
+	
 	/*Constructor with rotation quaternion*/
-    public VisualizeAxes(GLCapabilities capabilities, int width, int height,float[][] rotationQuaternion) {
-    	this(capabilities,width,height);
+    public VisualizeAxes(int width, int height,float[][] rotationQuaternion) {
+    	this(width,height);
 		setRotationQuaternion(rotationQuaternion);
+    }
+	
+	/*Constructor with no arguments*/
+    public VisualizeAxes() {
+    	this(800,500);
     }
 	
 	public void setRotationQuaternion(float[][] rotationQuaternion){
@@ -89,7 +119,7 @@ public class VisualizeAxes extends GLCanvas implements GLEventListener {
         glu = new GLU();
         // Start animator.
         animator = new FPSAnimator(this, fps);
-        animator.start();
+        
         
     }
 
@@ -126,15 +156,24 @@ public class VisualizeAxes extends GLCanvas implements GLEventListener {
 
 		/*Visualize the rotation*/
 		double rotA = rotationAngle/180.0*Math.PI;
-		float[] rotationQuaternion = {(float) (Math.cos(rotA/2.0)),(float)(Math.sin(rotA/2.0)*0.0),(float)(Math.sin(rotA/2.0)*0.0),(float)(Math.sin(rotA/2.0)*1.0)};
+		
+		if (rotationQuaternion == null){
+			tempRQ = new float[]{(float) (Math.cos(rotA/2.0)),(float)(Math.sin(rotA/2.0)*0.0),(float)(Math.sin(rotA/2.0)*0.0),(float)(Math.sin(rotA/2.0)*1.0)};
+			rotationAngle +=1f;
+		}else{
+			if (currentIndex <rotationQuaternion.length){
+				tempRQ = rotationQuaternion[currentIndex];
+				++currentIndex;
+			}
+		}
 		float[][] axes = {{0f,1f,0f}, {-1f,0f,0f},{0f,0f,1f}};
 		float[][] colours = {{1f,0f,0f}, {0f,1f,0f},{0f,0f,1f}};
 		for (int i = 0; i<axes.length;++i){
 			gl.glPushMatrix();	/*Save this state*/
-			addArrow(gl, axes[i],rotationQuaternion,colours[i]);	/*Add next axis arrow*/
+			addArrow(gl, axes[i],tempRQ,colours[i]);	/*Add next axis arrow*/
 			gl.glPopMatrix();	/*Return the stater*/
 		}
-		rotationAngle +=1f;
+		
 
     }
 
@@ -235,14 +274,8 @@ public class VisualizeAxes extends GLCanvas implements GLEventListener {
      * @param args Command line args.
      */
     public final static void main(String[] args) {
-        GLCapabilities capabilities = createGLCapabilities();
-        VisualizeAxes canvas = new VisualizeAxes(capabilities, 800, 500);
-        JFrame frame = new JFrame("Mini JOGL Demo (breed)");
-        frame.getContentPane().add(canvas, BorderLayout.CENTER);
-        frame.setSize(800, 500);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setVisible(true);
-        canvas.requestFocus();
+        VisualizeAxes canvas = new VisualizeAxes(800, 500);
+		//canvas.start();
     }
 
 }
