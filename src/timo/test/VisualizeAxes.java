@@ -33,7 +33,7 @@ public class VisualizeAxes extends GLCanvas implements GLEventListener {
     
     private static final long serialVersionUID = 20140218L;	/** Serial version UID. */
     private GLU glu;										/** The GL unit (helper class). */
-    private int fps = 60;									/** The frames per second setting. */
+    private int fps = 360;									/** The frames per second setting. */
     private FPSAnimator animator=null;							/** The OpenGL animator. */
 	private float rotationAngle;
 	private int currentIndex = 0;
@@ -205,6 +205,7 @@ public class VisualizeAxes extends GLCanvas implements GLEventListener {
 		}
 		float[][] axes = {{0f,1f,0f}, {-1f,0f,0f},{0f,0f,1f}};
 		float[][] colours = {{1f,0f,0f}, {0f,1f,0f},{0f,0f,1f}};
+		System.out.println("w "+tempRQ[0]+" x "+tempRQ[1]+" y "+tempRQ[2]+" z "+tempRQ[3]);
 		for (int i = 0; i<axes.length;++i){
 			gl.glPushMatrix();	/*Save this state*/
 			addArrow(gl, axes[i],tempRQ,colours[i]);	/*Add next axis arrow*/
