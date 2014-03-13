@@ -12,6 +12,8 @@ import com.jogamp.opengl.util.texture.*;		/*For texture*/
 import java.io.IOException;					/*Error handling*/
 import timo.test.utils.*;					/*Quaternions for rotations*/
 import java.nio.*;							/*Bytebuffers*/
+import com.jogamp.opengl.util.awt.TextRenderer;	/*Rendering text*/
+import java.awt.Font;							/*Font for text*/
 
 /**
  * Modified from the: 
@@ -37,8 +39,10 @@ public class VisualizeAxes extends GLCanvas implements GLEventListener {
     private FPSAnimator animator=null;							/** The OpenGL animator. */
 	private float rotationAngle;
 	private int currentIndex = 0;
-	private float[][] rotationQuaternion = null;			/** Rotation quaternion*/
-	private float[] tempRQ = null;
+	private int channelNo = 4;
+	private double[][] rotationQuaternion = null;			/** Rotation quaternion*/
+	private double[] tempRQ = null;
+	private TextRenderer tRenderer = null;	/**Text to display position in quaternion array*/
     /**
      * A new mini starter.
      * 
@@ -77,46 +81,64 @@ public class VisualizeAxes extends GLCanvas implements GLEventListener {
 	}
 	
 	/*Constructor with rotation quaternion*/
-    public VisualizeAxes(int width, int height,float[][] rotationQuaternion) {
+    public VisualizeAxes(int width, int height,double[][] rotationQuaternion) {
     	this(width,height);
 		setRotationQuaternion(rotationQuaternion);
     }
 	
-	/*Constructor with no arguments*/
-    public VisualizeAxes() {
+		/*Constructor with no arguments*/
+    public VisualizeAxes(String fileName, int fps) {
     	this(800,500);
+		this.fps = fps;
 		/*try to read quaternions from a file*/
-		File fName =new File("quaternions.tab");
+		
 		System.out.println("Start reading .tab");
+		readRotationQuaternionFile(fileName);
+		start();
+    }
+	
+	
+	/*Constructor with no arguments*/
+    public VisualizeAxes(int fps) {
+    	this(800,500);
+		this.fps = fps;
+		/*try to read quaternions from a file*/
+		String fileName = "quaternions.tab";
+		readRotationQuaternionFile(fileName);
+		start();
+    }
+	
+	private void readRotationQuaternionFile(String fileName){
+		File fName =new File(fileName);
 		if (fName.exists()){
 			try{
 				FileInputStream fileIn = new FileInputStream(fName);
 				byte[] dataIn = new byte[(int) fName.length()];
 				fileIn.read(dataIn);
+				fileIn.close();
+				fileIn = null;
 				ByteBuffer bb = ByteBuffer.wrap(dataIn);
 				bb.rewind();
-				float[] floatArray = new float[dataIn.length/4];
-				FloatBuffer fb = bb.asFloatBuffer().get(floatArray);
-				float[][] rotationQuaternion = new float[floatArray.length/4][4];
-				System.out.println("Read, insert to rotationQuaternion");
-				for (int i = 0;i<rotationQuaternion.length;++i){
-					for (int j = 0;j<4;++j){
-						rotationQuaternion[i][j] = floatArray[4*i+j];
-						if (i == 1){
-							System.out.println("values "+Float.toString(rotationQuaternion[i][j]));
-						}
+				double[] doubleArray = new double[dataIn.length/8];
+				DoubleBuffer db = bb.asDoubleBuffer().get(doubleArray);
+				double[][] imuData = new double[channelNo][doubleArray.length/channelNo];	/*Reserve memory for imuData*/
+				//System.out.println("Read, insert to rotationQuaternion channels"+Integer.toString(channelNo));
+				//System.out.print("ImuData ");
+				for (int i = 0;i<channelNo;++i){
+					for (int j = 0;j<imuData[i].length;++j){
+						imuData[i][j] = doubleArray[imuData[i].length*i+j];
 					}
 				}
-				setRotationQuaternion(rotationQuaternion);
+				setRotationQuaternion(imuData);
+				
 			}catch (Exception err){
 				System.out.println(err.toString());
 				System.out.println("Couldn't open the file");
 			}
 		}
-		start();
-    }
+	}
 	
-	public void setRotationQuaternion(float[][] rotationQuaternion){
+	public void setRotationQuaternion(double[][] rotationQuaternion){
 		this.rotationQuaternion = rotationQuaternion;
 	}
 	
@@ -147,6 +169,8 @@ public class VisualizeAxes extends GLCanvas implements GLEventListener {
         gl.glHint(gl.GL_PERSPECTIVE_CORRECTION_HINT, gl.GL_NICEST);
         // Create GLU.
         glu = new GLU();
+		//Text
+		tRenderer = new TextRenderer(new Font("Times", Font.BOLD,36));
         // Start animator.
         animator = new FPSAnimator(this, fps);
         
@@ -188,11 +212,11 @@ public class VisualizeAxes extends GLCanvas implements GLEventListener {
 		double rotA = rotationAngle/180.0*Math.PI;
 		
 		if (rotationQuaternion == null){
-			tempRQ = new float[]{(float) (Math.cos(rotA/2.0)),(float)(Math.sin(rotA/2.0)*0.0),(float)(Math.sin(rotA/2.0)*0.0),(float)(Math.sin(rotA/2.0)*1.0)};
+			tempRQ = new double[]{(Math.cos(rotA/2.0)),(Math.sin(rotA/2.0)*0.0),(Math.sin(rotA/2.0)*0.0),(Math.sin(rotA/2.0)*1.0)};
 			rotationAngle +=1f;
 		}else{
-			if (currentIndex <rotationQuaternion.length){
-				tempRQ = rotationQuaternion[currentIndex];
+			if (currentIndex <rotationQuaternion[0].length){
+				tempRQ = new double[]{rotationQuaternion[0][currentIndex],rotationQuaternion[1][currentIndex],rotationQuaternion[2][currentIndex],rotationQuaternion[3][currentIndex]};
 				++currentIndex;
 			}else{
 				try{
@@ -203,28 +227,44 @@ public class VisualizeAxes extends GLCanvas implements GLEventListener {
 				System.exit(0);
 			}
 		}
-		float[][] axes = {{0f,1f,0f}, {-1f,0f,0f},{0f,0f,1f}};
+		double[][] axes = {{90d,0d,1d,0d}, {-90d,1d,0d,0d},{0d,1d,0d,0d}};
 		float[][] colours = {{1f,0f,0f}, {0f,1f,0f},{0f,0f,1f}};
-		System.out.println("w "+tempRQ[0]+" x "+tempRQ[1]+" y "+tempRQ[2]+" z "+tempRQ[3]);
+		
+		System.out.println("currentIndex"+ currentIndex +" w "+tempRQ[0]+" x "+tempRQ[1]+" y "+tempRQ[2]+" z "+tempRQ[3]);
 		for (int i = 0; i<axes.length;++i){
 			gl.glPushMatrix();	/*Save this state*/
 			addArrow(gl, axes[i],tempRQ,colours[i]);	/*Add next axis arrow*/
 			gl.glPopMatrix();	/*Return the stater*/
 		}
 		
-
+		/*Add text*/
+		int w =drawable.getWidth();
+		int h = drawable.getHeight();
+		tRenderer.beginRendering(w, h);
+		// optionally set the color
+		tRenderer.setColor(1.0f, 1.0f, 1.0f, 1.0f);
+		tRenderer.draw(String.format("%.2f",((double)currentIndex)/(double)fps), w/10, h/10);
+		// ... more draw commands, color changes, etc.
+		tRenderer.endRendering();
     }
 
-	private void addArrow(GL2 gl, float[] axisRotation,float[] rotationQuaternion,float[] colours){
-		/*Rotations are considered in the  local coordinate system*/
+	private void addArrow(GL2 gl, double[] axisRotation,double[] rotationQuaternion,float[] colours){
+				/*Rotations are considered in the  local coordinate system*/
 		/*Prepare a quaternion rotQuat to rotate the axis from being aligned with Z to the correct direction */
-        double rotAngle = 90.0/180.0*Math.PI;
-        Quaternion rotQuat = new Quaternion(Math.cos(rotAngle/2.0),Math.sin(rotAngle/2.0)*axisRotation[0],Math.sin(rotAngle/2.0)*axisRotation[1],Math.sin(rotAngle/2)*axisRotation[2]);
-		/*Rotation of the local coordinate system*/
-		Quaternion localQuat = new Quaternion(rotationQuaternion[0],rotationQuaternion[1],rotationQuaternion[2],rotationQuaternion[3]);
-        Quaternion totalQ = localQuat.times(rotQuat);	/*Combine the rotation to coordinate axes, and the local coordinate system rotation*/
+        double rotAngle = axisRotation[0]/180.0*Math.PI;
+        Quaternion axisQuat = new Quaternion(Math.cos(rotAngle/2.0),Math.sin(rotAngle/2.0)*axisRotation[1],Math.sin(rotAngle/2.0)*axisRotation[2],Math.sin(rotAngle/2)*axisRotation[3]);
+		/*Rotate the whole coordinate system around the x-axis*/
+		Quaternion xQuat = new Quaternion(Math.cos(-Math.PI/2f/2f),Math.sin(-Math.PI/2f/2f)*1f,0f,0f);
+		/*Rotation of the local coordinate system from the imu*/
+		Quaternion localQuat = new Quaternion(rotationQuaternion[0],-rotationQuaternion[1],-rotationQuaternion[2],-rotationQuaternion[3]);
+
+		/*Combine the rotation to coordinate axes, and the local coordinate system 
+rotation*/
+		Quaternion oQuat = localQuat.times(axisQuat);
+        Quaternion totalQ = xQuat.times(oQuat);	
+		
         /*Apply the rotation to the visualization coordinate system*/
-        gl.glRotatef((float) (Math.acos(totalQ.x0)*2.0/Math.PI*180.0),(float)(totalQ.x1),(float)(totalQ.x2),(float)(totalQ.x3));	/*Uses quaternion type expression*/ 
+        gl.glRotatef((float) (Math.acos(totalQ.x0)*2.0/Math.PI*180.0),(float)(totalQ.x1),(float)(totalQ.x2),(float)(totalQ.x3));
 
         // Set material properties.
         float[] rgba = {colours[0], colours[1], colours[2],1.0f};
@@ -312,7 +352,12 @@ public class VisualizeAxes extends GLCanvas implements GLEventListener {
      * @param args Command line args.
      */
     public final static void main(String[] args) {
-        VisualizeAxes canvas = new VisualizeAxes();
+		if (args.length == 1){
+			VisualizeAxes canvas = new VisualizeAxes(Integer.parseInt(args[0]));
+		}
+		if (args.length == 2){
+			VisualizeAxes canvas = new VisualizeAxes(args[0], Integer.parseInt(args[1]));
+		}
 		//canvas.start();
     }
 

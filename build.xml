@@ -1,5 +1,5 @@
 <!-- bluetoothTest ANT build system -->
-<project name="VisualizeAxes" default="jar" basedir=".">
+<project name="VisualizeAxes" default="jarCopy" basedir=".">
   <description>
     Ant build system for VisualizeAxes
   </description>
@@ -38,6 +38,12 @@
 			<fileset dir="${jarLib}"/>
 		</copy>
 		<jar jarfile="${build}/VisualizeAxes.jar" basedir="${classes}" manifest="manifest/MANIFEST.MF"/>
+	</target>
+  
+	<target name="jarCopy" depends="jar" description="Copy Jar file to target" >
+		<!--mkdir dir="${classes}/${lib}"/-->
+		<copy file="${build}/VisualizeAxes.jar" todir="D:/timo/research/PoweredUp"/>
+		<copy file="${build}/VisualizeAxes.jar" todir="D:/timo/research/PoweredUp/analysis/accelerometry/figureOutCatapult"/>
 	</target>
   
 </project>
