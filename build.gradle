@@ -1,0 +1,50 @@
+apply plugin: 'java'
+
+repositories {
+       mavenCentral()
+}
+
+configurations {
+    // configuration that holds jars to include in the jar
+    extraLibs
+}
+
+dependencies {
+	compile group: 'org.jogamp.jogl', name: 'jogl-all', version: '2.3.2'
+	extraLibs group: 'org.jogamp.jogl', name: 'jogl-all', version: '2.3.2'
+	
+	compile group: 'org.jogamp.jogl', name: 'jogl-all', version: '2.3.2', classifier:'natives-linux-amd64'
+	extraLibs group: 'org.jogamp.jogl', name: 'jogl-all', version: '2.3.2', classifier:'natives-linux-amd64'
+	
+	compile group: 'org.jogamp.jogl', name: 'jogl-all', version: '2.3.2', classifier:'natives-windows-amd64'
+	extraLibs group: 'org.jogamp.jogl', name: 'jogl-all', version: '2.3.2', classifier:'natives-windows-amd64'
+	
+	
+	
+	compile group: 'org.jogamp.gluegen', name: 'gluegen-rt', version: '2.3.2'
+	extraLibs group: 'org.jogamp.gluegen', name: 'gluegen-rt', version: '2.3.2'
+	
+	compile group: 'org.jogamp.gluegen', name: 'gluegen-rt', version: '2.3.2', classifier:'natives-linux-amd64'
+	extraLibs group: 'org.jogamp.gluegen', name: 'gluegen-rt', version: '2.3.2', classifier:'natives-linux-amd64'
+	
+		compile group: 'org.jogamp.gluegen', name: 'gluegen-rt', version: '2.3.2', classifier:'natives-windows-amd64'
+	extraLibs group: 'org.jogamp.gluegen', name: 'gluegen-rt', version: '2.3.2', classifier:'natives-windows-amd64'
+	
+   configurations.compile.extendsFrom(configurations.extraLibs)
+}
+
+
+
+sourceCompatibility = 1.7
+version = '1.0'
+jar {
+	manifest {
+	  attributes	'Implementation-Title': 'visualizeAxes',
+		         	'Implementation-Version': version,
+						'Main-Class': 'timo.test.VisualizeAxes'
+	}
+	from {
+		configurations.extraLibs.collect { it.isDirectory() ? it : zipTree(it) }
+	}
+}
+
