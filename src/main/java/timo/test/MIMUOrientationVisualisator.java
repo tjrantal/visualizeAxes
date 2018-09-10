@@ -30,19 +30,15 @@ import java.awt.Font;							/*Font for text*/
  which has an elevation map as well (interesting thought...)
  
  */
-public class VisualizeAxes extends GLCanvas implements GLEventListener {
+public class MIMUOrientationVisualisator extends GLCanvas implements GLEventListener {
 
     
-    private static final long serialVersionUID = 20140218L;	/** Serial version UID. */
+    private static final long serialVersionUID = 20180910L;	/** Serial version UID. */
     private GLU glu;										/** The GL unit (helper class). */
-    private int fps = 360;									/** The frames per second setting. */
+    private int fps = -1;									/** The frames per second setting. */
     private FPSAnimator animator=null;							/** The OpenGL animator. */
-	private float rotationAngle;
-	private int currentIndex = 0;
-	private int channelNo = 4;
-	private double[][] rotationQuaternion = null;			/** Rotation quaternion*/
-	private double[] tempRQ = null;
-	private TextRenderer tRenderer = null;	/**Text to display position in quaternion array*/
+	private double[] rotationQuaternion = new double[]{1d,0d,0d,0d};			/** Rotation quaternion*/
+	private JFrame frame;
     /**
      * A new mini starter.
      * 
@@ -50,10 +46,9 @@ public class VisualizeAxes extends GLCanvas implements GLEventListener {
      * @param width The window width.
      * @param height The window height.
      */
-    public VisualizeAxes(int width, int height) {
+    public MIMUOrientationVisualisator(int width, int height) {
     	super(createGLCapabilities());
-		System.out.println("Visualise axes WH");
-		JFrame frame = new JFrame("Visualize Quaternion Axes");
+		frame = new JFrame("Visualise MIMU");
         frame.getContentPane().add(this, BorderLayout.CENTER);
         frame.setSize(width, height);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -61,11 +56,21 @@ public class VisualizeAxes extends GLCanvas implements GLEventListener {
         this.requestFocus();
         setSize(width, height);
         addGLEventListener(this);
-		
-        rotationAngle = 0;
-		
+		fps = 60;
+		System.out.println("wh constructor returned");
+		start();
     }
 
+	public MIMUOrientationVisualisator(int width, int height, int posX, int posY) {
+		this(width,height);
+		setLocation(posX,posY);
+		System.out.println("Constructor returned");
+	}
+	
+	public void setLocation(int x, int y){
+		frame.setLocation(x,y);
+	}
+	
 	public void start(){
 		Boolean isStarted = false;
 		while (!isStarted){
@@ -76,79 +81,25 @@ public class VisualizeAxes extends GLCanvas implements GLEventListener {
 				System.out.println("Animator null start()");
 				try{
 					Thread.sleep(100);
-				}catch(Exception err){}
+				}catch(Exception err){
+					System.out.println("Cannot sleep");
+				}
 			}
 			
 		}
-		System.out.println("Exited start()");
+		System.out.println("Start returned");
 	}
 	
 	public void shutdown(){
 		if (animator != null){
 			animator.stop();
 		}
-		System.exit(0);
+		//System.exit(0);
 	}
 	
-	/*Constructor with rotation quaternion*/
-    public VisualizeAxes(int width, int height,double[][] rotationQuaternion) {
-    	this(width,height);
-		setRotationQuaternion(rotationQuaternion);
-    }
+
 	
-		/*Constructor with no arguments*/
-    public VisualizeAxes(String fileName, int fps) {
-    	this(800,500);
-		this.fps = fps;
-		/*try to read quaternions from a file*/
-		
-		System.out.println("Start reading .tab");
-		readRotationQuaternionFile(fileName);
-		start();
-    }
-	
-	
-	/*Constructor with no arguments*/
-    public VisualizeAxes(int fps) {
-    	this(800,500);
-		this.fps = fps;
-		/*try to read quaternions from a file*/
-		//String fileName = "quaternions.tab";
-		//readRotationQuaternionFile(fileName);
-		start();
-    }
-	
-	private void readRotationQuaternionFile(String fileName){
-		File fName =new File(fileName);
-		if (fName.exists()){
-			try{
-				FileInputStream fileIn = new FileInputStream(fName);
-				byte[] dataIn = new byte[(int) fName.length()];
-				fileIn.read(dataIn);
-				fileIn.close();
-				fileIn = null;
-				ByteBuffer bb = ByteBuffer.wrap(dataIn);
-				bb.rewind();
-				double[] doubleArray = new double[dataIn.length/8];
-				DoubleBuffer db = bb.asDoubleBuffer().get(doubleArray);
-				double[][] imuData = new double[channelNo][doubleArray.length/channelNo];	/*Reserve memory for imuData*/
-				//System.out.println("Read, insert to rotationQuaternion channels"+Integer.toString(channelNo));
-				//System.out.print("ImuData ");
-				for (int i = 0;i<channelNo;++i){
-					for (int j = 0;j<imuData[i].length;++j){
-						imuData[i][j] = doubleArray[imuData[i].length*i+j];
-					}
-				}
-				setRotationQuaternion(imuData);
-				
-			}catch (Exception err){
-				System.out.println(err.toString());
-				System.out.println("Couldn't open the file");
-			}
-		}
-	}
-	
-	public void setRotationQuaternion(double[][] rotationQuaternion){
+	public void setRotationQuaternion(double[] rotationQuaternion){
 		this.rotationQuaternion = rotationQuaternion;
 	}
 	
@@ -156,7 +107,7 @@ public class VisualizeAxes extends GLCanvas implements GLEventListener {
      * @return Some standard GL capabilities (with alpha).
      */
     private static GLCapabilities createGLCapabilities() {
-        GLProfile glp = GLProfile.getDefault();//(GLProfile.GL2); /*My maching supports up to GL2...*/
+        GLProfile glp = GLProfile.getDefault();//(GLProfile.GL2); /*My machine supports up to GL2...*/
         GLCapabilities capabilities = new GLCapabilities(glp);
         return capabilities;
     }
@@ -180,12 +131,11 @@ public class VisualizeAxes extends GLCanvas implements GLEventListener {
         gl.glHint(gl.GL_PERSPECTIVE_CORRECTION_HINT, gl.GL_NICEST);
         // Create GLU.
         glu = new GLU();
-		//Text
-		tRenderer = new TextRenderer(new Font("Times", Font.BOLD,36));
         // Start animator.
+		System.out.println("Create animator");
         animator = new FPSAnimator(this, fps);
-        
-        
+        System.out.println("Animator created");
+        //start();
     }
 
     /**
@@ -220,43 +170,20 @@ public class VisualizeAxes extends GLCanvas implements GLEventListener {
         gl.glEnable(gl.GL_LIGHTING);
 
 		/*Visualize the rotation*/
-		double rotA = rotationAngle/180.0*Math.PI;
 		
-		if (rotationQuaternion == null){
-			tempRQ = new double[]{(Math.cos(rotA/2.0)),(Math.sin(rotA/2.0)*0.0),(Math.sin(rotA/2.0)*0.0),(Math.sin(rotA/2.0)*1.0)};
-			rotationAngle +=1f;
-		}else{
-			if (currentIndex <rotationQuaternion[0].length){
-				tempRQ = new double[]{rotationQuaternion[0][currentIndex],rotationQuaternion[1][currentIndex],rotationQuaternion[2][currentIndex],rotationQuaternion[3][currentIndex]};
-				++currentIndex;
-			}else{
-				try{
-					Thread.sleep(1000);
-				}catch(Exception err){
-					
-				}
-				shutdown();
-			}
-		}
+
+
+
 		double[][] axes = {{90d,0d,1d,0d}, {-90d,1d,0d,0d},{0d,1d,0d,0d}};
 		float[][] colours = {{1f,0f,0f}, {0f,1f,0f},{0f,0f,1f}};
 		
-		//System.out.println("currentIndex"+ currentIndex +" w "+tempRQ[0]+" x "+tempRQ[1]+" y "+tempRQ[2]+" z "+tempRQ[3]);
+
 		for (int i = 0; i<axes.length;++i){
 			gl.glPushMatrix();	/*Save this state*/
-			addArrow(gl, axes[i],tempRQ,colours[i]);	/*Add next axis arrow*/
+			addArrow(gl, axes[i],rotationQuaternion,colours[i]);	/*Add next axis arrow*/
 			gl.glPopMatrix();	/*Return the stater*/
 		}
-		
-		/*Add text*/
-		int w =drawable.getSurfaceWidth();
-		int h = drawable.getSurfaceHeight();
-		tRenderer.beginRendering(w, h);
-		// optionally set the color
-		tRenderer.setColor(1.0f, 1.0f, 1.0f, 1.0f);
-		tRenderer.draw(String.format("%.2f",((double)currentIndex)/(double)fps), w/10, h/10);
-		// ... more draw commands, color changes, etc.
-		tRenderer.endRendering();
+
     }
 
 	private void addArrow(GL2 gl, double[] axisRotation,double[] rotationQuaternion,float[] colours){
@@ -357,19 +284,12 @@ rotation*/
     public void dispose(GLAutoDrawable drawable) {
     }
 
-    /**
-     * Starts the JOGL mini demo.
-     * 
-     * @param args Command line args.
-     */
-    public final static void main(String[] args) {
-		if (args.length == 1){
-			VisualizeAxes canvas = new VisualizeAxes(Integer.parseInt(args[0]));
-		}
-		if (args.length == 2){
-			VisualizeAxes canvas = new VisualizeAxes(args[0], Integer.parseInt(args[1]));
-		}
-		//canvas.start();
+	public final static void main(String[] args) {
+	
+		MIMUOrientationVisualisator canvas = new MIMUOrientationVisualisator(Integer.parseInt(args[0]),Integer.parseInt(args[1]));
+	
+	
+	//canvas.start();
     }
-
+	
 }
