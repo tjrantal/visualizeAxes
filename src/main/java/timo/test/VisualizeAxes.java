@@ -80,6 +80,13 @@ public class VisualizeAxes extends GLCanvas implements GLEventListener {
 		
 	}
 	
+	public void shutdown(){
+		if (animator != null){
+			animator.stop();
+		}
+		System.exit(0);
+	}
+	
 	/*Constructor with rotation quaternion*/
     public VisualizeAxes(int width, int height,double[][] rotationQuaternion) {
     	this(width,height);
@@ -220,11 +227,11 @@ public class VisualizeAxes extends GLCanvas implements GLEventListener {
 				++currentIndex;
 			}else{
 				try{
-					Thread.sleep(5000);
+					Thread.sleep(1000);
 				}catch(Exception err){
 					
 				}
-				System.exit(0);
+				shutdown();
 			}
 		}
 		double[][] axes = {{90d,0d,1d,0d}, {-90d,1d,0d,0d},{0d,1d,0d,0d}};
