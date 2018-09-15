@@ -5,7 +5,7 @@ clc;
 
 javaaddpath('build/libs/visualizeAxes-1.0.jar');
 
-mimuOV = javaObject('timo.test.MIMUOrientationVisualisator',600,600,500,200);
+mimuOV = javaObject('timo.test.MIMUOrientationVisualiser',600,600,500,200);
 esa = 1;
 
 for i = 1:360
@@ -14,4 +14,4 @@ for i = 1:360
    pause(1/60)
 end
 
-mimuOV.shutdown();
+%mimuOV.shutdown();
