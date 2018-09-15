@@ -12,7 +12,6 @@ import com.jogamp.opengl.util.texture.*;		/*For texture*/
 import java.io.IOException;					/*Error handling*/
 import timo.test.utils.*;					/*Quaternions for rotations*/
 import java.nio.*;							/*Bytebuffers*/
-import com.jogamp.opengl.util.awt.TextRenderer;	/*Rendering text*/
 import java.awt.Font;							/*Font for text*/
 
 /**
