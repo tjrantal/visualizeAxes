@@ -174,7 +174,8 @@ public class MIMUOrientationVisualiser extends GLCanvas implements GLEventListen
 
 
 
-		double[][] axes = {{90d,0d,1d,0d}, {-90d,1d,0d,0d},{0d,1d,0d,0d}};
+		double[][] axes = {{90d,0d,1d,0d},{180d,0d,1d,0d}, {-90d,1d,0d,0d}};
+		//double[][] axes = {{1d,0d,0d,0d}, {1d,0d,0d,0d},{1d,0d,0d,0d}};
 		float[][] colours = {{1f,0f,0f}, {0f,1f,0f},{0f,0f,1f}};
 		
 
@@ -191,15 +192,18 @@ public class MIMUOrientationVisualiser extends GLCanvas implements GLEventListen
 		/*Prepare a quaternion rotQuat to rotate the axis from being aligned with Z to the correct direction */
         double rotAngle = axisRotation[0]/180.0*Math.PI;
         Quaternion axisQuat = new Quaternion(Math.cos(rotAngle/2.0),Math.sin(rotAngle/2.0)*axisRotation[1],Math.sin(rotAngle/2.0)*axisRotation[2],Math.sin(rotAngle/2)*axisRotation[3]);
-		/*Rotate the whole coordinate system around the x-axis*/
-		Quaternion xQuat = new Quaternion(Math.cos(-Math.PI/2f/2f),Math.sin(-Math.PI/2f/2f)*1f,0f,0f);
-		/*Rotation of the local coordinate system from the imu*/
-		Quaternion localQuat = new Quaternion(rotationQuaternion[0],-rotationQuaternion[1],-rotationQuaternion[2],-rotationQuaternion[3]);
+
+		/*Rotation of the local coordinate system from the imu
+			NOTE opengl coordinate system is left-handed x to the right, y up and z into the screen
+			MIMU quaternion is right-handed and x-to the right, y into the screen and z up
+			handedness is sorted with taking the quaternion conjugate (change the sign of the real part)
+			Axes are simply swapped z to y, hence axis[1,3,2] is used
+		*/
+		Quaternion localQuat = new Quaternion(rotationQuaternion[0],-rotationQuaternion[1],-rotationQuaternion[3],-rotationQuaternion[2]);
 
 		/*Combine the rotation to coordinate axes, and the local coordinate system 
 rotation*/
-		Quaternion oQuat = localQuat.times(axisQuat);
-        Quaternion totalQ = xQuat.times(oQuat);	
+			Quaternion totalQ = localQuat.times(axisQuat);	
 		
         /*Apply the rotation to the visualization coordinate system*/
         gl.glRotatef((float) (Math.acos(totalQ.x0)*2.0/Math.PI*180.0),(float)(totalQ.x1),(float)(totalQ.x2),(float)(totalQ.x3));
