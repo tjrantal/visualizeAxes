@@ -12,6 +12,7 @@ import com.jogamp.opengl.util.texture.*;		/*For texture*/
 import java.io.IOException;					/*Error handling*/
 import timo.test.utils.*;					/*Quaternions for rotations*/
 import java.nio.*;							/*Bytebuffers*/
+import com.jogamp.opengl.util.awt.TextRenderer;	/*Rendering text*/
 import java.awt.Font;							/*Font for text*/
 
 /**
@@ -38,6 +39,8 @@ public class MIMUOrientationVisualiser extends GLCanvas implements GLEventListen
     private FPSAnimator animator=null;							/** The OpenGL animator. */
 	private double[] rotationQuaternion = new double[]{1d,0d,0d,0d};			/** Rotation quaternion*/
 	private JFrame frame;
+	private TextRenderer tRenderer = null;	/**Text to display position in quaternion array*/
+	private String textToRender = "";
     /**
      * A new mini starter.
      * 
@@ -72,6 +75,10 @@ public class MIMUOrientationVisualiser extends GLCanvas implements GLEventListen
 	public MIMUOrientationVisualiser(int width, int height, int posX, int posY, int fps) {
 		this(width,height,fps);
 		setLocation(posX,posY);
+	}
+	
+	public void setTitle(String title){
+		frame.setTitle(title);
 	}
 	
 	public void setLocation(int x, int y){
@@ -110,6 +117,11 @@ public class MIMUOrientationVisualiser extends GLCanvas implements GLEventListen
 		this.rotationQuaternion = rotationQuaternion;
 	}
 	
+	public void setRotationQuaternion(double[] rotationQuaternion, String textToRender){
+		this.textToRender = textToRender;
+		setRotationQuaternion(rotationQuaternion);
+	}
+	
     /**
      * @return Some standard GL capabilities (with alpha).
      */
@@ -138,6 +150,8 @@ public class MIMUOrientationVisualiser extends GLCanvas implements GLEventListen
         gl.glHint(gl.GL_PERSPECTIVE_CORRECTION_HINT, gl.GL_NICEST);
         // Create GLU.
         glu = new GLU();
+		//Add text renderer
+		tRenderer = new TextRenderer(new Font("Times", Font.BOLD,36));
         // Start animator.
 		System.out.println("Create animator");
         animator = new FPSAnimator(this, fps);
@@ -191,6 +205,16 @@ public class MIMUOrientationVisualiser extends GLCanvas implements GLEventListen
 			addArrow(gl, axes[i],rotationQuaternion,colours[i]);	/*Add next axis arrow*/
 			gl.glPopMatrix();	/*Return the stater*/
 		}
+		
+		/*Add text*/
+		int w =drawable.getSurfaceWidth();
+		int h = drawable.getSurfaceHeight();
+		tRenderer.beginRendering(w, h);
+		// optionally set the color
+		tRenderer.setColor(1.0f, 1.0f, 1.0f, 1.0f);
+		tRenderer.draw(textToRender, w/10, h/10);
+		// ... more draw commands, color changes, etc.
+		tRenderer.endRendering();
 
     }
 
