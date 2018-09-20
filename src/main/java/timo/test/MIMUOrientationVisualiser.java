@@ -45,7 +45,7 @@ public class MIMUOrientationVisualiser extends GLCanvas implements GLEventListen
      * @param width The window width.
      * @param height The window height.
      */
-    public MIMUOrientationVisualiser(int width, int height) {
+    public MIMUOrientationVisualiser(int width, int height, int fps) {
     	super(createGLCapabilities());
 		frame = new JFrame("Visualise MIMU");
         frame.getContentPane().add(this, BorderLayout.CENTER);
@@ -56,15 +56,22 @@ public class MIMUOrientationVisualiser extends GLCanvas implements GLEventListen
         this.requestFocus();
         setSize(width, height);
         addGLEventListener(this);
-		fps = 60;
+		this.fps = fps;
 		System.out.println("wh constructor returned");
 		start();
     }
+	
+	public MIMUOrientationVisualiser(int width, int height) {
+		this(width,height,60);
+    }
 
 	public MIMUOrientationVisualiser(int width, int height, int posX, int posY) {
-		this(width,height);
+		this(width,height,posX,posY,60);		
+	}
+	
+	public MIMUOrientationVisualiser(int width, int height, int posX, int posY, int fps) {
+		this(width,height,fps);
 		setLocation(posX,posY);
-		System.out.println("Constructor returned");
 	}
 	
 	public void setLocation(int x, int y){
