@@ -227,10 +227,10 @@ public class MIMUOrientationVisualiser extends GLCanvas implements GLEventListen
 		/*Rotation of the local coordinate system from the imu
 			NOTE opengl coordinate system is left-handed x to the right, y up and z into the screen
 			MIMU quaternion is right-handed and x-to the right, y into the screen and z up
-			handedness is sorted with taking the quaternion conjugate (change the sign of the real part)
-			Axes are simply swapped z to y, hence axis[1,3,2] is used
+			handedness is sorted with changing the sign of Z
+			Z and Y axes are swapped, hence axis[1,3,2] is used
 		*/
-		Quaternion localQuat = new Quaternion(rotationQuaternion[0],-rotationQuaternion[1],-rotationQuaternion[3],-rotationQuaternion[2]);
+		Quaternion localQuat = new Quaternion(rotationQuaternion[0],rotationQuaternion[1],rotationQuaternion[3],-rotationQuaternion[2]);
 
 		/*Combine the rotation to coordinate axes, and the local coordinate system 
 rotation*/
